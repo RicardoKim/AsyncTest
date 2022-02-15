@@ -9,6 +9,11 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 
 @Slf4j
 @Controller
@@ -18,10 +23,13 @@ public class AdminController {
     TestService testService;
 
     @PostMapping("admin/test")
-    public ResponseEntity<?> testController(){
+    public ResponseEntity<?> testController() throws ExecutionException, InterruptedException {
+        List<Future<Boolean>> asyncResultWaitingQueue = new ArrayList<>();
         for(int i = 0 ; i < 5 ; i++){
-            testService.asyncMethod(i);
-
+            asyncResultWaitingQueue.add(testService.asyncMethod(i));
+        }
+        for(Future<Boolean> result : asyncResultWaitingQueue){
+            result.get();
         }
         log.info("Main Process Done : " + LocalDateTime.now());
         return ResponseEntity.ok().body(LocalDateTime.now());
